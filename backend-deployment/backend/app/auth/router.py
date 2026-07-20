@@ -37,6 +37,7 @@ def _assert_login_rate_limit(identifier: str) -> None:
 
 def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_me: bool) -> None:
     secure_cookie = settings.env.lower() == "production"
+    same_site = "none" if secure_cookie else "lax"
     max_age = settings.jwt_expire_minutes * 60 if remember_me else None
     response.set_cookie(
         settings.auth_cookie_name,
@@ -44,7 +45,7 @@ def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_
         max_age=max_age,
         httponly=True,
         secure=secure_cookie,
-        samesite="lax",
+        samesite=same_site,
     )
     response.set_cookie(
         settings.csrf_cookie_name,
@@ -52,14 +53,15 @@ def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_
         max_age=max_age,
         httponly=False,
         secure=secure_cookie,
-        samesite="lax",
+        samesite=same_site,
     )
 
 
 def _clear_auth_cookies(response: Response) -> None:
     secure_cookie = settings.env.lower() == "production"
-    response.delete_cookie(settings.auth_cookie_name, secure=secure_cookie, samesite="lax")
-    response.delete_cookie(settings.csrf_cookie_name, secure=secure_cookie, samesite="lax")
+    same_site = "none" if secure_cookie else "lax"
+    response.delete_cookie(settings.auth_cookie_name, secure=secure_cookie, samesite=same_site)
+    response.delete_cookie(settings.csrf_cookie_name, secure=secure_cookie, samesite=same_site)
 
 
 @router.post("/login", response_model=LoginResponse)
