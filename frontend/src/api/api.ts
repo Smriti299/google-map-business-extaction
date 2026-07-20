@@ -1,23 +1,39 @@
 import axios from "axios";
 
 function normalizeApiBaseUrl(url?: string) {
+  const fallback = "/api";
   if (!url) {
-    return "/api";
+    return fallback;
   }
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return fallback;
   }
 
-  if (url.startsWith("://")) {
-    return `http${url}`;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    const parsedUrl = new URL(trimmed);
+    const pathname = parsedUrl.pathname === "/" || parsedUrl.pathname === ""
+      ? "/api"
+      : parsedUrl.pathname.endsWith("/api")
+        ? parsedUrl.pathname
+        : `${parsedUrl.pathname.replace(/\/$/, "")}/api`;
+    return `${parsedUrl.origin}${pathname}`;
   }
 
-  if (url.startsWith(":")) {
-    return `http://localhost${url}`;
+  if (trimmed.startsWith("/")) {
+    return trimmed.endsWith("/api") ? trimmed : `${trimmed.replace(/\/$/, "")}/api`;
   }
 
-  return url;
+  if (trimmed.startsWith("://")) {
+    return `http${trimmed}`;
+  }
+
+  if (trimmed.startsWith(":")) {
+    return `http://localhost${trimmed}`;
+  }
+
+  return trimmed.startsWith("api") ? `/${trimmed}` : `/${trimmed}`;
 }
 
 const api = axios.create({
@@ -36,7 +52,8 @@ function getCookie(name: string) {
 api.interceptors.request.use((config) => {
   const method = config.method?.toUpperCase() ?? "GET";
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
-    const csrfToken = getCookie("gmb_csrf");
+    const csrfCookieName = import.meta.env.VITE_CSRF_COOKIE_NAME || "gmb_csrf";
+    const csrfToken = getCookie(csrfCookieName);
     if (csrfToken) {
       config.headers["X-CSRF-Token"] = csrfToken;
     }
@@ -77,7 +94,7 @@ export interface AuthUser {
 }
 
 export async function login(email: string, password: string, rememberMe: boolean) {
-  const response = await api.post<{ user: AuthUser }>("/auth/login", {
+  const response = await api.post<{ user: AuthUser }>('auth/login', {
     email,
     password,
     remember_me: rememberMe,
@@ -86,41 +103,41 @@ export async function login(email: string, password: string, rememberMe: boolean
 }
 
 export async function logout() {
-  await api.post("/auth/logout");
+  await api.post('auth/logout');
 }
 
 export async function getCurrentUser() {
-  const response = await api.get<AuthUser>("/auth/me");
+  const response = await api.get<AuthUser>('auth/me');
   return response.data;
 }
 
 export async function startJob(payload: StartJobPayload) {
-  const response = await api.post<Job>("/start-job", payload);
+  const response = await api.post<Job>('start-job', payload);
   return response.data;
 }
 
 export async function listJobs() {
-  const response = await api.get<{ jobs?: Job[] }>("/jobs");
+  const response = await api.get<{ jobs?: Job[] }>('jobs');
   return response.data.jobs ?? [];
 }
 
 export async function getJob(jobId: string) {
-  const response = await api.get<Job>(`/job/${jobId}`);
+  const response = await api.get<Job>(`job/${jobId}`);
   return response.data;
 }
 
 export async function deleteJob(jobId: string) {
-  await api.delete(`/job/${jobId}`);
+  await api.delete(`job/${jobId}`);
 }
 
 export async function getResults(jobId: string) {
-  const response = await api.get<Record<string, unknown>[]>(`/job/${jobId}/results`);
+  const response = await api.get<Record<string, unknown>[]>(`job/${jobId}/results`);
   return response.data;
 }
 
 export async function updateRecord(jobId: string, recordId: string, payload: RecordUpdatePayload) {
   const response = await api.patch<{ record_id: string; lead_status: string; notes: string }>(
-    `/job/${jobId}/records/${recordId}`,
+    `job/${jobId}/records/${recordId}`,
     payload
   );
   return response.data;
@@ -128,7 +145,7 @@ export async function updateRecord(jobId: string, recordId: string, payload: Rec
 
 export async function createExport(jobId: string, format: string) {
   const response = await api.get<{ job_id: string; format: string; file_name: string }>(
-    `/export/${jobId}`,
+    `export/${jobId}`,
     { params: { format } }
   );
   return response.data;
