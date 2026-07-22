@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
             "http://127.0.0.1:5173",
             "https://smriti299-google-map-business.vercel.app",
             "https://google-map-business-1p86.vercel.app",
+            "https://iridescent-crepe-4a5490.netlify.app",
         ],
         allow_origin_regex=r"https://.*\.vercel\.app",
         allow_credentials=True,
