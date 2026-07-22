@@ -36,10 +36,24 @@ def _assert_login_rate_limit(identifier: str) -> None:
     attempts.append(now)
 
 
-def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_me: bool) -> None:
+def _is_secure_cookie_context(request: Request | None = None) -> bool:
     env_name = (settings.env or "").lower()
-    is_production = env_name == "production" or os.getenv("RENDER") == "true" or os.getenv("VERCEL") == "1"
-    secure_cookie = is_production
+    if env_name in {"production", "prod", "staging"}:
+        return True
+    if os.getenv("RENDER") in {"true", "1"} or os.getenv("VERCEL") == "1" or os.getenv("NETLIFY") == "true":
+        return True
+    if os.getenv("NODE_ENV", "").lower() in {"production", "prod"}:
+        return True
+    if request is not None:
+        forwarded_proto = request.headers.get("x-forwarded-proto", "")
+        if forwarded_proto.lower().startswith("https"):
+            return True
+        return request.url.scheme == "https"
+    return False
+
+
+def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_me: bool, request: Request | None = None) -> None:
+    secure_cookie = _is_secure_cookie_context(request)
     same_site = "none" if secure_cookie else "lax"
     max_age = settings.jwt_expire_minutes * 60 if remember_me else None
     response.set_cookie(
@@ -60,10 +74,8 @@ def _set_auth_cookies(response: Response, token: str, csrf_token: str, remember_
     )
 
 
-def _clear_auth_cookies(response: Response) -> None:
-    env_name = (settings.env or "").lower()
-    is_production = env_name == "production" or os.getenv("RENDER") == "true" or os.getenv("VERCEL") == "1"
-    secure_cookie = is_production
+def _clear_auth_cookies(response: Response, request: Request | None = None) -> None:
+    secure_cookie = _is_secure_cookie_context(request)
     same_site = "none" if secure_cookie else "lax"
     response.delete_cookie(settings.auth_cookie_name, secure=secure_cookie, samesite=same_site)
     response.delete_cookie(settings.csrf_cookie_name, secure=secure_cookie, samesite=same_site)
@@ -94,14 +106,14 @@ async def login(request: Request, response: Response, payload: LoginRequest):
     session_id = auth_store.create_session(str(user["id"]), placeholder, create_access_token(str(user["id"]), "pending", csrf_token)[1])
     token, _ = create_access_token(str(user["id"]), session_id, csrf_token)
     auth_store.update_session_token(session_id, token)
-    _set_auth_cookies(response, token, csrf_token, payload.remember_me)
+    _set_auth_cookies(response, token, csrf_token, payload.remember_me, request)
     return LoginResponse(user=_public_user(user))
 
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(response: Response, request: Request, current_user: AuthenticatedUser = Depends(require_csrf)):
     request.app.state.auth_store.deactivate_session(current_user.session_id)
-    _clear_auth_cookies(response)
+    _clear_auth_cookies(response, request)
     return LogoutResponse()
 
 
