@@ -1,5 +1,39 @@
 import axios from "axios";
 
+let csrfToken: string | undefined;
+
+function getStoredCsrfToken() {
+  if (csrfToken) {
+    return csrfToken;
+  }
+
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const storageValue = window.sessionStorage.getItem("gmb_csrf_token");
+  if (storageValue) {
+    csrfToken = storageValue;
+    return csrfToken;
+  }
+
+  return undefined;
+}
+
+function setStoredCsrfToken(token?: string) {
+  csrfToken = token;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (token) {
+    window.sessionStorage.setItem("gmb_csrf_token", token);
+  } else {
+    window.sessionStorage.removeItem("gmb_csrf_token");
+  }
+}
+
 function normalizeApiBaseUrl(url?: string) {
   const fallback = "/api";
   if (!url) {
@@ -52,10 +86,9 @@ function getCookie(name: string) {
 api.interceptors.request.use((config) => {
   const method = config.method?.toUpperCase() ?? "GET";
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
-    const csrfCookieName = import.meta.env.VITE_CSRF_COOKIE_NAME || "gmb_csrf";
-    const csrfToken = getCookie(csrfCookieName);
-    if (csrfToken) {
-      config.headers["X-CSRF-Token"] = csrfToken;
+    const csrfTokenValue = getStoredCsrfToken();
+    if (csrfTokenValue) {
+      config.headers["X-CSRF-Token"] = csrfTokenValue;
     }
   }
   return config;
@@ -94,21 +127,33 @@ export interface AuthUser {
 }
 
 export async function login(email: string, password: string, rememberMe: boolean) {
-  const response = await api.post<{ user: AuthUser }>('auth/login', {
+  const response = await api.post<{ user: AuthUser; csrf_token?: string }>('auth/login', {
     email,
     password,
     remember_me: rememberMe,
   });
+  if (response.data.csrf_token) {
+    setStoredCsrfToken(response.data.csrf_token);
+  }
   return response.data.user;
 }
 
 export async function logout() {
   await api.post('auth/logout');
+  setStoredCsrfToken(undefined);
 }
 
 export async function getCurrentUser() {
-  const response = await api.get<AuthUser>('auth/me');
-  return response.data;
+  const response = await api.get<AuthUser & { csrf_token?: string }>('auth/me');
+  if (response.data.csrf_token) {
+    setStoredCsrfToken(response.data.csrf_token);
+  }
+  return {
+    id: response.data.id,
+    email: response.data.email,
+    full_name: response.data.full_name,
+    role: response.data.role,
+  };
 }
 
 export async function startJob(payload: StartJobPayload) {

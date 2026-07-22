@@ -12,10 +12,12 @@ class UserResponse(BaseModel):
     email: str
     full_name: str | None = None
     role: str
+    csrf_token: str | None = None
 
 
 class LoginResponse(BaseModel):
     user: UserResponse
+    csrf_token: str | None = None
 
 
 class LogoutResponse(BaseModel):

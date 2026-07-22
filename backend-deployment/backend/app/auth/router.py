@@ -107,7 +107,7 @@ async def login(request: Request, response: Response, payload: LoginRequest):
     token, _ = create_access_token(str(user["id"]), session_id, csrf_token)
     auth_store.update_session_token(session_id, token)
     _set_auth_cookies(response, token, csrf_token, payload.remember_me, request)
-    return LoginResponse(user=_public_user(user))
+    return LoginResponse(user=_public_user(user), csrf_token=csrf_token)
 
 
 @router.post("/logout", response_model=LogoutResponse)
@@ -124,4 +124,5 @@ async def me(current_user: AuthenticatedUser = Depends(get_current_user)):
         email=current_user.email,
         full_name=current_user.full_name,
         role=current_user.role,
+        csrf_token=current_user.csrf_token,
     )
