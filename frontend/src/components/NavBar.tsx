@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const links = [
@@ -11,6 +11,15 @@ const links = [
 
 function NavBar() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  }
 
   return (
     <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto border-r border-white/10 bg-slate-950 text-white">
@@ -68,7 +77,7 @@ function NavBar() {
           </div>
           <button
             type="button"
-            onClick={() => void logout()}
+            onClick={() => void handleLogout()}
             className="rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
           >
             Logout

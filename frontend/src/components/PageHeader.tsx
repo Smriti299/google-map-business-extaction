@@ -15,7 +15,7 @@ type PageHeaderProps = {
 
 function PageHeader({ eyebrow, title, description, metrics = [], actions }: PageHeaderProps) {
   return (
-    <section className="sticky top-0 z-20 mb-6 overflow-hidden rounded-[28px] border border-slate-200/70 bg-white/80 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.75)] backdrop-blur">
+    <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200/70 bg-white/80 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.75)] backdrop-blur">
       <div className="bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_24%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] px-5 py-5 sm:px-6 lg:px-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">

@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate, NavLink, Outlet } from "react-router-dom";
+import { Route, Routes, Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import { useAuth } from "./auth/AuthContext";
 import NavBar from "./components/NavBar";
@@ -11,6 +11,15 @@ import LoginPage from "./pages/Login";
 
 function AppShell() {
   const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -28,7 +37,7 @@ function AppShell() {
             <span className="truncate">{user?.email}</span>
             <button
               type="button"
-              onClick={() => void logout()}
+              onClick={() => void handleLogout()}
               className="rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700"
             >
               Logout
