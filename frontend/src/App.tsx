@@ -59,8 +59,10 @@ function AppShell() {
           </div>
         </div>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <Outlet />
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 2xl:px-10">
+          <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1500px]">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

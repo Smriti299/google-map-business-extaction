@@ -93,7 +93,7 @@ function JobsPage() {
   }
 
   return (
-    <section>
+    <section className="mx-auto w-full max-w-7xl">
       <PageHeader
         eyebrow="Record Ledger"
         title="Structured records with operational controls"
@@ -122,7 +122,7 @@ function JobsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_380px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_380px] 2xl:grid-cols-[minmax(0,1.7fr)_420px]">
         <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/90 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.55)]">
           <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-5">
             <div>

@@ -56,8 +56,9 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-950 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(460px,0.75fr)]">
-      <section className="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-950">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(460px,0.75fr)]">
+        <section className="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.18),transparent_32%),linear-gradient(135deg,rgba(15,23,42,1),rgba(8,47,73,0.84))]" />
         <div className="relative">
           <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">
@@ -188,6 +189,7 @@ function LoginPage() {
           </button>
         </form>
       </main>
+      </div>
     </div>
   );
 }
